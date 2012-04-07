@@ -20,7 +20,8 @@ var options = {
 			    'securityGroups':["Production", "Web"]
 		    };
 aws.launchOnDemandInstances(1, options, function (err, response) {
-instanceId = response.item.instanceId;
+        instanceId = response.item.instanceId;
+    });
 
 ```
 
