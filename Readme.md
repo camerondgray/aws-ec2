@@ -49,6 +49,7 @@ Receive a call back with ```callback(error,response)``` where the response is a 
     $ npm install -d
 
   Edit /test/testConfig.json to include your actual awsKey and awsSecretKey and the options you want to use for testing
+
   ```js
   {
       "accessKey":"yourAccessKey",
