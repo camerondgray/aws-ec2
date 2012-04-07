@@ -50,7 +50,7 @@ Receive a call back with ```callback(error,response)``` where the response is a 
 
   Edit /test/testConfig.json to include your actual awsKey and awsSecretKey and the options you want to use for testing
 
-  ```js
+```js
   {
       "accessKey":"yourAccessKey",
       "secretAccessKey":"yourSecretAccessKey",
@@ -60,7 +60,7 @@ Receive a call back with ```callback(error,response)``` where the response is a 
       "ami":"youAmi",
       "spotPrice":0.001
   }
-  ```
+```
 
   Run the unit tests:
 
