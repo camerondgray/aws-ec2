@@ -68,6 +68,7 @@ Receive a call back with ```callback(error,response)``` where the response is a 
 
   Run the integration tests:
   Again, will launch and terminate actual instances
+
     $ make test-integration
 
 ## License
