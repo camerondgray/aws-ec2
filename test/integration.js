@@ -26,8 +26,6 @@ describe('If I issue a request to add a valid ami', function () {
 		it('Should return a list with at least the instance we just launched in it', function (done) {
 			var filters = {},
 				instances = [];
-
-
 			aws.getInstances(filters, function (err, response) {
 				should.not.exist(err);
 				for (var i = 0; i < response.length; i++) {
@@ -45,7 +43,6 @@ describe('If I issue a request to add a valid ami', function () {
 		it('Should return a list with at least the instance we just launched in it', function (done) {
 			var filters = {},
 				instances = [];
-			//{'Filter.1.Name':'private-ip-address', 'Filter.1.Value':privateIp}
 			for (var i = 0; i < config.securityGroups.length; i++) {
 				filters['Filter.' + (i + 1) + '.Name'] = 'group-name';
 				filters['Filter.' + (i + 1) + '.Value'] = config.securityGroups[i];
