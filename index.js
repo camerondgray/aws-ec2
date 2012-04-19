@@ -75,6 +75,31 @@ module.exports = function (awsKey, awsSecretKey) {
 
 	}
 
+	function getInstances(filters, callback) {
+		ec2.call('DescribeInstances', filters, function (err, response) {
+			var instances = [],
+				reservationSet;
+			try {
+				reservationSet = response.reservationSet.item;
+				for (var i = 0; i < reservationSet.length; i++) {
+					if (reservationSet[i].instancesSet.item instanceof Array) {
+						for (var j = 0; j < reservationSet[i].instancesSet.item.length; j++) {
+							instances.push(reservationSet[i].instancesSet.item[j]);
+						}
+					}
+					else {
+						instances.push(reservationSet[i].instancesSet.item);
+					}
+
+				}
+			}
+			catch (e) {
+				err = 'No instances found:  ' + e + ' - ' + err;
+				instances = response;
+			}
+			callback(err, instances);
+		});
+	}
 
 	function getInstanceDescriptionFromPrivateIp(privateIp, callback) {
 		ec2.call('DescribeInstances', {'Filter.1.Name':'private-ip-address', 'Filter.1.Value':privateIp}, function (err, response) {
@@ -138,6 +163,7 @@ module.exports = function (awsKey, awsSecretKey) {
 		launchSpotInstances:launchSpotInstances,
 		getInstanceDescriptionFromPrivateIp:getInstanceDescriptionFromPrivateIp,
 		getInstanceDescriptionFromId:getInstanceDescriptionFromId,
+		getInstances:getInstances,
 		describeSpotInstanceRequest:describeSpotInstanceRequest,
 		terminateEc2Instance:terminateEc2Instance,
 		cancelSpotRequest:cancelSpotRequest

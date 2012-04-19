@@ -2,6 +2,7 @@ var config = require('./config.js'),
 	aws = require('../index.js')(config.accessKey, config.secretAccessKey),
 	should = require('should');
 
+
 //These tests launch actual amazon instances which cost money to run, use them wisely.
 describe('If I issue a request to add a valid ami', function () {
 	var instanceId,
@@ -20,6 +21,23 @@ describe('If I issue a request to add a valid ami', function () {
 			instanceId.should.not.be.empty;
 			done();
 		});
+	});
+	describe('If I request a list of all my currently running instances', function () {
+		it('Should return a list with at least the instance we just launched in it', function (done) {
+			var filters = {},
+				instances = [];
+				aws.getInstances(filters, function (err, response) {
+				should.not.exist(err);
+				for (var i = 0; i < response.length; i++) {
+					instances.push(response[i].instanceId);
+				}
+				instances.should.not.be.empty;
+				instances.should.include(instanceId);
+				done();
+
+			});
+		});
+
 	});
 	describe('If you request a description of that instance based on Id', function () {
 		it('should match the id you got from the launch request', function (done) {
@@ -61,12 +79,12 @@ describe('If I issue a request to launch a spot instance', function () {
 	var spotRequestId;
 	it('should give me back a response containing my requestId', function (done) {
 		var options = {
-					'ami':config.ami,
-					'awsZone':config.awsZone,
-					'instanceType':config.instanceType,
-					'securityGroups':config.securityGroups,
-					'spotPrice':config.spotPrice
-				};
+			'ami':config.ami,
+			'awsZone':config.awsZone,
+			'instanceType':config.instanceType,
+			'securityGroups':config.securityGroups,
+			'spotPrice':config.spotPrice
+		};
 		aws.launchSpotInstances(1, options, function (err, response) {
 			should.not.exist(err);
 			spotRequestId = response.spotInstanceRequestId;
@@ -74,17 +92,17 @@ describe('If I issue a request to launch a spot instance', function () {
 			done();
 		});
 	});
-	describe('If I issue a request to cancel the request I just made', function() {
-		it('Should not return an error', function(done){
-			aws.cancelSpotRequest(spotRequestId,function(err,response){
+	describe('If I issue a request to cancel the request I just made', function () {
+		it('Should not return an error', function (done) {
+			aws.cancelSpotRequest(spotRequestId, function (err, response) {
 				should.not.exist(err);
 				done();
 			});
 		});
 	});
-	describe('If I then request a description of that same spot request', function(){
-		it('Should return a description with a status of cancelled', function(done){
-			aws.describeSpotInstanceRequest(spotRequestId,function(err,response){
+	describe('If I then request a description of that same spot request', function () {
+		it('Should return a description with a status of cancelled', function (done) {
+			aws.describeSpotInstanceRequest(spotRequestId, function (err, response) {
 				should.not.exist(err);
 				response.state.should.eql('cancelled');
 				done();
