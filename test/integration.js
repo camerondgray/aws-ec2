@@ -2,19 +2,31 @@ var config = require('./config.js'),
 	aws = require('../index.js')(config.accessKey, config.secretAccessKey),
 	should = require('should');
 
+describe('If I request a list of all my currently running instances', function () {
+    it('Should return a valid response', function (done) {
+        var filters = {},
+            instances = [];
+        aws.getInstances(filters, function (err, response) {
+            should.not.exist(err);
+            done();
+        });
+    });
+
+});
 
 //These tests launch actual amazon instances which cost money to run, use them wisely.
 describe('If I issue a request to add a valid ami', function () {
 	var instanceId,
 		instance;
-	it('I should get back a valid response', function (done) {
+	it('Should get back a valid response', function (done) {
 		var options = {
+            'numToLaunch': 1,
 			'ami':config.ami,
 			'awsZone':config.awsZone,
 			'instanceType':config.instanceType,
 			'securityGroups':config.securityGroups
 		};
-		aws.launchOnDemandInstances(1, options, function (err, response) {
+		aws.launchOnDemandInstances(options, function (err, response) {
 
 			should.not.exist(err);
 			instanceId = response.item.instanceId;
@@ -100,13 +112,14 @@ describe('If I issue a request to launch a spot instance', function () {
 	var spotRequestId;
 	it('should give me back a response containing my requestId', function (done) {
 		var options = {
+            'numToLaunch': 1,
 			'ami':config.ami,
 			'awsZone':config.awsZone,
 			'instanceType':config.instanceType,
 			'securityGroups':config.securityGroups,
 			'spotPrice':config.spotPrice
 		};
-		aws.launchSpotInstances(1, options, function (err, response) {
+		aws.launchSpotInstances(options, function (err, response) {
 			should.not.exist(err);
 			spotRequestId = response.spotInstanceRequestId;
 			spotRequestId.should.not.be.empty;
