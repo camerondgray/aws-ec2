@@ -2,7 +2,7 @@
   "author": "Cameron Gray <cameron@mindflash.com>",
   "name": "aws-ec2",
   "description": "A tiny little module for managing ec2 instance from node",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/mindflash/aws-ec2.git"
