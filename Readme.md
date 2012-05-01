@@ -1,6 +1,6 @@
 # aws-ec2
 
-  A small library for launching, describing, and terminating aws ec2 instance
+  A small library for launching, describing, and terminating Amazon Web Services (AWS) EC2 instances
 
 ## Installation
 
@@ -14,7 +14,7 @@ var aws = require('aws-ec2')(myAccessKey, mySecretAccessKey);
 
 var instanceId;
 var options = {
-                'numToLaunch':1
+                'numToLaunch':1,
                 'ami':'myAMI',
 	            'awsZone':'us-east-1a',
 	            'instanceType':'t1-micro',
@@ -35,6 +35,11 @@ ami, awsZone, and instanceType are required. The other options can be found [her
 Receive a call back with ```callback(error,response)``` where the response is a [RunningInstanceItemType](http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-ItemType-RunningInstancesItemType.html)
 
 ### launchSpotInstances(params, callback)
+Launch one ore more spot instances. Spot instances are reserved based on a maximum price bid for each instance. See [AWS Spot Instances](http://aws.amazon.com/ec2/spot-instances/) for more info on this cheaper alternative.
+ami, awsZone, and instanceType are required.
+
+Recieve a call back with ```callback(error,response)```.
+
 ### getInstanceDescriptionFromPrivateIp(privateIp, callback)
 ### getInstanceDescriptionFromId(instanceId, callback)
 ### describeSpotInstanceRequest(requestId, callback)
@@ -53,13 +58,13 @@ Receive a call back with ```callback(error,response)``` where the response is a 
 
 ```js
   {
-      "accessKey":"yourAccessKey",
-      "secretAccessKey":"yourSecretAccessKey",
-      "awsZone":"us-east-1a",
-      "instanceType":"t1.micro",
-      "securityGroups":["YourSecurityGroup1", "YourSecurityGroup2"],
-      "ami":"ami-yourAmi",
-      "spotPrice":0.001
+      'accessKey':'yourAccessKey',
+      'secretAccessKey':'yourSecretAccessKey',
+      'awsZone':'us-east-1a',
+      'instanceType':'t1.micro',
+      'securityGroups':["YourSecurityGroup1", "YourSecurityGroup2"],
+      'ami':'ami-yourAmi',
+      'spotPrice':0.001
   }
 ```
 
