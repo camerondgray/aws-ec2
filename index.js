@@ -23,7 +23,7 @@ module.exports = function (awsKey, awsSecretKey) {
 		var options = {
 			'ImageId':params.ami,
 			'MinCount':1,
-			'MaxCount':params.numToLaunch || 1,
+			'MaxCount':params.numToLaunch,
 			'Placement.AvailabilityZone':params.awsZone,
 			'InstanceType':params.instanceType
 		};
@@ -48,8 +48,8 @@ module.exports = function (awsKey, awsSecretKey) {
 
 	function launchSpotInstances(params, callback) {
 		var options = {
-			'SpotPrice':params.spotPrice || 0.001,
-			'InstanceCount':params.numToLaunch || 1,
+			'SpotPrice':params.spotPrice,
+			'InstanceCount':params.numToLaunch,
 			'LaunchSpecification.ImageId':params.ami,
 			'LaunchSpecification.InstanceType':params.instanceType,
 			'LaunchSpecification.Placement.AvailabilityZone':params.awsZone
