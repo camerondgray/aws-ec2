@@ -19,17 +19,17 @@ module.exports = function (awsKey, awsSecretKey) {
 	ec2.version = '2011-12-15';
 
 
-	function launchOnDemandInstances(numberToLaunch, opts, callback) {
+	function launchOnDemandInstances(params, callback) {
 		var options = {
-			'ImageId':opts.ami,
+			'ImageId':params.ami,
 			'MinCount':1,
-			'MaxCount':numberToLaunch,
-			'Placement.AvailabilityZone':opts.awsZone,
-			'InstanceType':opts.instanceType
+			'MaxCount':params.numberToLaunch || 1,
+			'Placement.AvailabilityZone':params.awsZone,
+			'InstanceType':params.instanceType
 		};
 		//specify the security groups to launch in
-		for (var i = 0; i < opts.securityGroups.length; i++) {
-			options['SecurityGroup.' + (i + 1)] = opts.securityGroups[i];
+		for (var i = 0; i < params.securityGroups.length; i++) {
+			options['SecurityGroup.' + (i + 1)] = params.securityGroups[i];
 		}
 		ec2.call('RunInstances', options, function (err, response) {
 			//make sure we have an instance set in the response and return that
@@ -46,17 +46,17 @@ module.exports = function (awsKey, awsSecretKey) {
 
 	}
 
-	function launchSpotInstances(numberToLaunch, opts, callback) {
+	function launchSpotInstances(params, callback) {
 		var options = {
-			'SpotPrice':opts.spotPrice,
-			'InstanceCount':numberToLaunch,
-			'LaunchSpecification.ImageId':opts.ami,
-			'LaunchSpecification.InstanceType':opts.instanceType,
-			'LaunchSpecification.Placement.AvailabilityZone':opts.awsZone
+			'SpotPrice':params.spotPrice || 0.001,
+			'InstanceCount':params.numberToLaunch || 1,
+			'LaunchSpecification.ImageId':params.ami,
+			'LaunchSpecification.InstanceType':params.instanceType,
+			'LaunchSpecification.Placement.AvailabilityZone':params.awsZone
 		};
 		//specify the security groups to launch in
-		for (var i = 0; i < opts.securityGroups.length; i++) {
-			options['LaunchSpecification.SecurityGroup.' + (i + 1)] = opts.securityGroups[i];
+		for (var i = 0; i < params.securityGroups.length; i++) {
+			options['LaunchSpecification.SecurityGroup.' + (i + 1)] = params.securityGroups[i];
 		}
 
 		ec2.call('RequestSpotInstances', options, function (err, response) {
