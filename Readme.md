@@ -32,13 +32,13 @@ aws.launchOnDemandInstances(options, function (err, response) {
 Launch one or more on demand instances.
 ami, awsZone, and instanceType are required. The other options can be found [here](http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-RunInstances.html)
 
-Receive a call back with ```callback(error,response)``` where the response is a [RunningInstanceItemType](http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-ItemType-RunningInstancesItemType.html)
+Receive a callback with ```callback(error,response)``` where the response is a [RunningInstanceItemType](http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-ItemType-RunningInstancesItemType.html)
 
 ### launchSpotInstances(params, callback)
 Launch one ore more spot instances. Spot instances are reserved based on a maximum price bid for each instance. See [AWS Spot Instances](http://aws.amazon.com/ec2/spot-instances/) for more info on this cheaper alternative.
 ami, awsZone, and instanceType are required.
 
-Recieve a call back with ```callback(error,response)```.
+Receive a callback with ```callback(error,response)```.
 
 ### getInstanceDescriptionFromPrivateIp(privateIp, callback)
 ### getInstanceDescriptionFromId(instanceId, callback)
@@ -67,10 +67,6 @@ Recieve a call back with ```callback(error,response)```.
       'spotPrice':0.001
   }
 ```
-
-  Run the unit tests:
-
-    $ make test
 
   Run the integration tests:
   Again, will launch and terminate actual instances
