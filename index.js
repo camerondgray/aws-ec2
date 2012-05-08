@@ -66,7 +66,7 @@ module.exports = function (awsKey, awsSecretKey) {
 			}
 			else {
 				response = response.spotInstanceRequestSet.item;
-				if (response.state == 'cancelled' || response.state == 'failed') {
+				if (response.state === 'cancelled' || response.state === 'failed') {
 					err = ' error issue spot instance request fault code is: ' + response.fault;
 				}
 			}
@@ -82,13 +82,12 @@ module.exports = function (awsKey, awsSecretKey) {
 			try {
 				reservationSet = response.reservationSet.item;
 				for (var i = 0; i < reservationSet.length; i++) {
-					if (reservationSet[i].instancesSet.item instanceof Array) {
-						for (var j = 0; j < reservationSet[i].instancesSet.item.length; j++) {
-							instances.push(reservationSet[i].instancesSet.item[j]);
-						}
+					var instancesSet = reservationSet[i].instancesSet.item;
+					if (instancesSet instanceof Array) {
+						instances = instances.concat(instancesSet);
 					}
 					else {
-						instances.push(reservationSet[i].instancesSet.item);
+						instances.push(instancesSet);
 					}
 
 				}
@@ -137,8 +136,8 @@ module.exports = function (awsKey, awsSecretKey) {
 			catch (e) {
 				err = 'Failure terminating instance: ' + instanceId + ' ' + err;
 			}
-			if (!err && result != 'shutting-down') {
-				err = 'Instance is not termimating ';
+			if (!err && result !== 'shutting-down') {
+				err = 'Instance is not terminating ';
 			}
 			callback(err, response);
 
@@ -157,7 +156,6 @@ module.exports = function (awsKey, awsSecretKey) {
 		});
 	}
 
-
 	return {
 		launchOnDemandInstances:launchOnDemandInstances,
 		launchSpotInstances:launchSpotInstances,
@@ -167,10 +165,8 @@ module.exports = function (awsKey, awsSecretKey) {
 		describeSpotInstanceRequest:describeSpotInstanceRequest,
 		terminateEc2Instance:terminateEc2Instance,
 		cancelSpotRequest:cancelSpotRequest
-	}
-
-
-}
+	};
+};
 
 
 
