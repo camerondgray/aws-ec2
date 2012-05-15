@@ -1,9 +1,9 @@
 {
-    "accessKey":"yourAccessKey",
-    "secretAccessKey":"yourSecretAccessKey",
-    "awsZone":"us-east-1a",
-    "instanceType":"t1.micro",
-    "securityGroups":["Group1", "Group2"],
-    "ami":"yourAmi",
-    "spotPrice":0.001
+	"accessKey":"yourAccessKey",
+	"secretAccessKey":"yourSecretAccessKey",
+	"awsZone":"us-east-1a",
+	"instanceType":"t1.micro",
+	"securityGroups":["Group1", "Group2"],
+	"ami":"yourAmi",
+	"spotPrice":0.001
 }
