@@ -1,14 +1,11 @@
 var config = require('./config.js'),
-	aws = require('../index.js')(config.accessKey, config.secretAccessKey),
-	should = require('should');
+	aws = require('../index.js')(config.accessKey, config.secretAccessKey);
 
 describe('If I request a list of all my currently running instances', function () {
     it('Should return a valid response', function (done) {
-        var filters = {},
-            instances = [];
+        var filters = {};
         aws.getInstances(filters, function (err, response) {
-            should.not.exist(err);
-            done();
+            done(err);
         });
     });
 
@@ -27,11 +24,9 @@ describe('If I issue a request to add a valid ami', function () {
 			'securityGroups':config.securityGroups
 		};
 		aws.launchOnDemandInstances(options, function (err, response) {
-
-			should.not.exist(err);
 			instanceId = response.item.instanceId;
 			instanceId.should.not.be.empty;
-			done();
+			done(err);
 		});
 	});
 	describe('If I request a list of all my currently running instances', function () {
@@ -39,13 +34,12 @@ describe('If I issue a request to add a valid ami', function () {
 			var filters = {},
 				instances = [];
 			aws.getInstances(filters, function (err, response) {
-				should.not.exist(err);
 				for (var i = 0; i < response.length; i++) {
 					instances.push(response[i].instanceId);
 				}
 				instances.should.not.be.empty;
 				instances.should.include(instanceId);
-				done();
+				done(err);
 
 			});
 		});
@@ -60,13 +54,12 @@ describe('If I issue a request to add a valid ami', function () {
 				filters['Filter.' + (i + 1) + '.Value'] = config.securityGroups[i];
 			}
 			aws.getInstances(filters, function (err, response) {
-				should.not.exist(err);
 				for (var i = 0; i < response.length; i++) {
 					instances.push(response[i].instanceId);
 				}
 				instances.should.not.be.empty;
 				instances.should.include(instanceId);
-				done();
+				done(err);
 
 			});
 		});
@@ -75,10 +68,9 @@ describe('If I issue a request to add a valid ami', function () {
 	describe('If you request a description of that instance based on Id', function () {
 		it('should match the id you got from the launch request', function (done) {
 			aws.getInstanceDescriptionFromId(instanceId, function (err, response) {
-				should.not.exist(err);
 				instance = response;
 				instance.instanceId.should.eql(instanceId);
-				done();
+				done(err);
 			})
 		})
 		it('should show that it launched in the correct zone', function (done) {
@@ -100,8 +92,7 @@ describe('If I issue a request to add a valid ami', function () {
 	describe('If you request to terminate the instance I just launched', function () {
 		it('should have a new status of shutting down', function (done) {
 			aws.terminateEc2Instance(instanceId, function (err, response) {
-				should.not.exist(err);
-				done();
+				done(err);
 			});
 		});
 	});
@@ -120,26 +111,23 @@ describe('If I issue a request to launch a spot instance', function () {
 			'spotPrice':config.spotPrice
 		};
 		aws.launchSpotInstances(options, function (err, response) {
-			should.not.exist(err);
 			spotRequestId = response.spotInstanceRequestId;
 			spotRequestId.should.not.be.empty;
-			done();
+			done(err);
 		});
 	});
 	describe('If I issue a request to cancel the request I just made', function () {
 		it('Should not return an error', function (done) {
 			aws.cancelSpotRequest(spotRequestId, function (err, response) {
-				should.not.exist(err);
-				done();
+				done(err);
 			});
 		});
 	});
 	describe('If I then request a description of that same spot request', function () {
 		it('Should return a description with a status of cancelled', function (done) {
 			aws.describeSpotInstanceRequest(spotRequestId, function (err, response) {
-				should.not.exist(err);
 				response.state.should.eql('cancelled');
-				done();
+				done(err);
 			})
 		})
 	})
