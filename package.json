@@ -5,7 +5,7 @@
 	"version":"0.1.0",
 	"repository":{
 		"type":"git",
-		"url":"git://github.com/mindflash/aws-ec2.git"
+		"url":"git://github.com/camerondgray/aws-ec2.git"
 	},
 	"main":"index.js",
 	"scripts":{
