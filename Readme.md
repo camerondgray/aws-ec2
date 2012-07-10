@@ -43,7 +43,7 @@ ami, awsZone, and instanceType are required. The other options can be found [her
 Receive a callback with ```callback(error,response)``` where the response is a [RunningInstanceItemType](http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-ItemType-RunningInstancesItemType.html)
 
 ### launchSpotInstances(params, callback)
-Launch one ore more spot instances. Spot instances are reserved based on a maximum price bid for each instance.
+Launch one or more spot instances. Spot instances are reserved based on a maximum price bid for each instance.
 See [AWS Spot Instances](http://aws.amazon.com/ec2/spot-instances/) for more info on this cheaper alternative.
 ami, awsZone, and instanceType are required.
 
