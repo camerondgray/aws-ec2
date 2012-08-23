@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/camerondgray/aws-ec2.png)](http://travis-ci.org/camerondgray/aws-ec2)
 # aws-ec2
 
   A small library for launching, describing, and terminating Amazon Web Services (AWS) EC2 instances
