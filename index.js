@@ -14,10 +14,6 @@ function processInstanceDescription(err, response, callback) {
 
 module.exports = function (awsKey, awsSecretKey) {
     var ec2 = aws.createEC2Client(awsKey, awsSecretKey);
-    //the api version that this library defaults to is ancient and doesn't support things like tagging
-    //so let's specify a more recent version
-    ec2.version = '2011-12-15';
-
 
     function launchOnDemandInstances(params, callback) {
         var options = {

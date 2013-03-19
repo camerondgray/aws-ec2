@@ -51,7 +51,7 @@ describe('If I issue a request to add a valid ami', function () {
                 instances = [];
             for (var i = 0; i < config.securityGroups.length; i++) {
                 filters['Filter.' + (i + 1) + '.Name'] = 'group-name';
-                filters['Filter.' + (i + 1) + '.Value'] = config.securityGroups[i];
+                filters['Filter.' + (i + 1) + '.Value.1'] = config.securityGroups[i];
             }
             aws.getInstances(filters, function (err, response) {
                 for (var i = 0; i < response.length; i++) {
