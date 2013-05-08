@@ -1,155 +1,145 @@
-var aws = require('aws-lib');
+var AWS = require('aws-sdk');
 
-function processInstanceDescription(err, response, callback) {
-    var instance;
-    try {
-        instance = response.reservationSet.item.instancesSet.item;
-    }
-    catch (e) {
-        err = 'Could not find instance:  ' + err;
-        instance = response;
-    }
-    callback(err, instance);
+
+function processInstanceDescription(err, data, callback) {
+	if(err){
+		callback(err,data);
+		return;
+	}
+	var reservations = data.Reservations;
+    var instances = reservations[0].Instances;
+
+	if(instances.length !=1){
+		callback('No instances found or more than one instance found - ' + err,data);
+		return;
+	}
+	callback(err,instances[0]);
 }
 
 module.exports = function (awsKey, awsSecretKey) {
-    var ec2 = aws.createEC2Client(awsKey, awsSecretKey);
-
+	AWS.config.update({accessKeyId: awsKey, secretAccessKey: awsSecretKey,region:'us-east-1'});
+	var EC2 = new AWS.EC2();
     function launchOnDemandInstances(params, callback) {
         var options = {
             'ImageId':params.ami,
             'MinCount':1,
             'MaxCount':params.numToLaunch,
-            'Placement.AvailabilityZone':params.awsZone,
-            'InstanceType':params.instanceType
-        };
-        //specify the security groups to launch in
-        for (var i = 0; i < params.securityGroups.length; i++) {
-            options['SecurityGroup.' + (i + 1)] = params.securityGroups[i];
+            'Placement':{AvailabilityZone:params.awsZone},
+            'InstanceType':params.instanceType,
+	        'SecurityGroups':params.securityGroups
         }
-        ec2.call('RunInstances', options, function (err, response) {
-            //make sure we have an instance set in the response and return that
-
-            if (!response.instancesSet) {
-                err = 'Failure launching instance(s): ' + err;
-            }
-            else {
-                response = response.instancesSet;
-            }
-
-            callback(err, response);
-        });
-
+	    EC2.runInstances(options,function(err,data){
+		    if(!data){
+			    err = 'Failure launching instance(s): ' + err;
+		    }
+		    else{
+			    data = data.Instances;
+		    }
+		    callback(err,data);
+	    });
     }
 
     function launchSpotInstances(params, callback) {
         var options = {
             'SpotPrice':params.spotPrice,
             'InstanceCount':params.numToLaunch,
-            'LaunchSpecification.ImageId':params.ami,
-            'LaunchSpecification.InstanceType':params.instanceType,
-            'LaunchSpecification.Placement.AvailabilityZone':params.awsZone
-        };
-        //specify the security groups to launch in
-        for (var i = 0; i < params.securityGroups.length; i++) {
-            options['LaunchSpecification.SecurityGroup.' + (i + 1)] = params.securityGroups[i];
+            'LaunchSpecification':{
+	            'ImageId':params.ami,
+		        'InstanceType':params.instanceType,
+		        'Placement':{'AvailabilityZone':params.awsZone},
+	            'SecurityGroups':params.securityGroups
+            },
+	        'Type':params.type
         }
-
-        ec2.call('RequestSpotInstances', options, function (err, response) {
-            //make sure we have a valid state and return the response
-            if (!response.spotInstanceRequestSet) {
-                err = 'Failed to issue spot instance request \n ' + err;
-            }
-            else {
-                response = response.spotInstanceRequestSet.item;
-                if (response.state === 'cancelled' || response.state === 'failed') {
-                    err = ' error issue spot instance request fault code is: ' + response.fault;
-                }
-            }
-            callback(err, response);
-        });
-
+	    EC2.requestSpotInstances(options,function(err,data){
+			if (err) {
+				err = 'Failed to issue spot instance request \n ' + err;
+			}
+			else {
+				data = data.SpotInstanceRequests[0];
+				if (data.state === 'cancelled' || data.state === 'failed') {
+					err = ' error issue spot instance request fault code is: ' + data.code + ' - ' +  data.message;
+				}
+			}
+			callback(err,data);
+		});
     }
 
     function getInstances(filters, callback) {
-        ec2.call('DescribeInstances', filters, function (err, response) {
-            var instances = [],
-                reservationSet;
-            try {
-                reservationSet = response.reservationSet.item;
-                for (var i = 0; i < reservationSet.length; i++) {
-                    var instancesSet = reservationSet[i].instancesSet.item;
-                    if (instancesSet instanceof Array) {
-                        instances = instances.concat(instancesSet);
-                    }
-                    else {
-                        instances.push(instancesSet);
-                    }
-
-                }
-            }
-            catch (e) {
-                err = 'No instances found:  ' + e + ' - ' + err;
-                instances = response;
-            }
-            callback(err, instances);
-        });
+	    EC2.describeInstances({Filters:filters},function(err,data){
+		    if(err){
+			    callback(err);
+			    return;
+		    }
+		    var reservations = data.Reservations;
+		    if(err || reservations.length<1){
+			    err = 'No instances found:  '+ err;
+			    callback(err,data);
+			    return;
+		    }
+		    var instances = [];
+		    for (var i=0;i<reservations.length;i++){
+			    var instancesSet = reservations[i].Instances;
+			    if (instancesSet instanceof Array) {
+				    instances = instances.concat(instancesSet);
+			    }
+			    else {
+				    instances.push(instancesSet);
+			    }
+		    }
+		    callback(err,instances);
+	    });
     }
 
     function getInstanceDescriptionFromPrivateIp(privateIp, callback) {
-        ec2.call('DescribeInstances', {'Filter.1.Name':'private-ip-address', 'Filter.1.Value':privateIp}, function (err, response) {
-            processInstanceDescription(err, response, callback);
-        });
+	    var filters = {
+		    Filters:[{Name:'private-ip-address',Values:[privateIp]}]
+	    }
+	    EC2.describeInstances(filters,function(err,data){
+		   processInstanceDescription(err,data,callback);
+	    });
     }
 
     function getInstanceDescriptionFromId(instanceId, callback) {
-        ec2.call('DescribeInstances', {'Filter.1.Name':'instance-id', 'Filter.1.Value':instanceId}, function (err, response) {
-            processInstanceDescription(err, response, callback);
-        });
+	    EC2.describeInstances({InstanceIds:[instanceId]},function(err,data){
+		    processInstanceDescription(err,data,callback);
+	    });
     }
 
-
     function describeSpotInstanceRequest(requestId, callback) {
-        ec2.call('DescribeSpotInstanceRequests', {'Filter.1.Name':'spot-instance-request-id', 'Filter.1.Value':requestId}, function (err, response) {
-
-            if (!response.spotInstanceRequestSet) {
-                err = ' Failed to find spot instance request: ' + requestId + ' ' + err;
-            }
-            else {
-                response = response.spotInstanceRequestSet.item;
-            }
-            callback(err, response);
-        });
+	    EC2.describeSpotInstanceRequests({SpotInstanceRequestIds:[requestId]},function(err,data){
+		   if(!data.SpotInstanceRequests){
+			   callback('no spot request found: ' + err,data);
+			   return;
+		   }
+		   data = data.SpotInstanceRequests[0];
+		   callback(err,data);
+	    });
     }
 
     function terminateEc2Instance(instanceId, callback) {
-        ec2.call('TerminateInstances', {'InstanceId.1':instanceId}, function (err, response) {
-
-            var result;
-            try {
-                result = response.instancesSet.item.currentState.name;
-            }
-            catch (e) {
-                err = 'Failure terminating instance: ' + instanceId + ' ' + err;
-            }
-            if (!err && result !== 'shutting-down') {
-                err = 'Instance is not terminating ';
-            }
-            callback(err, response);
-
-        });
+	    EC2.terminateInstances({InstanceIds:[instanceId]},function(err,data){
+		    if(err){
+			    callback(err,data);
+			    return;
+		    }
+		    if(data.TerminatingInstances[0].InstanceId != instanceId || data.TerminatingInstances[0].CurrentState.Name != 'shutting-down'){
+			    err = 'Error terminating instance: ' + err + ' ' + data;
+		    }
+		    callback(err,data);
+	    });
     }
 
     function cancelSpotRequest(requestId, callback) {
-        ec2.call('CancelSpotInstanceRequests', {'SpotInstanceRequestId.1':requestId}, function (err, response) {
-            if (!response.spotInstanceRequestSet) {
-                err = 'Failed to cancel spot request: ' + requestId + ' ' + err;
-            }
-            else {
-                response = response.spotInstanceRequestSet.item;
-            }
-            callback(err, response);
-        });
+	    EC2.cancelSpotInstanceRequests({SpotInstanceRequestIds:[requestId]},function(err,data){
+		   if(err || data.CancelledSpotInstanceRequests.length<1){
+			   err = 'Failed to cancel spot request: ' + requestId + ' ' + err + ' ' + data;
+		   }
+		   else{
+			   data = data.CancelledSpotInstanceRequests[0];
+		   }
+		   callback(err,data);
+	    });
     }
 
     return {

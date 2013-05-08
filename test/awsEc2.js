@@ -4,16 +4,11 @@ var config = require('./config.js');
 var aws = require('../index.js')(config.accessKey, config.secretAccessKey);
 var _ = require('lodash');
 
-
-test.timeout = 120;
-//lengthen the timeout for tap because AWS can be slow sometimes
-//console.log('timeout is: ' + process.env.TAP_TIMEOUT);
-//test.timeout = 120;
 test('Basic describe calls', function(t){
 	t.test('Requesting a list of currently running instances', function(t){
-		var filters = {};
+		var filters = [];
 		aws.getInstances(filters,function(err, response){
-			t.notOk(err,'No error is returned');
+			t.notOk(err,'No error is returned: ' + err);
 			t.end();
 		})
 	});
@@ -36,27 +31,37 @@ test('Launching AMIs', function(t){
 			'securityGroups':config.securityGroups
 		};
 		aws.launchOnDemandInstances(options,function(err,response){
-			instanceId = response.item.instanceId;
+			if(err){
+				t.bailout(err);
+			}
+			instanceId = response[0].InstanceId;
+		//	console.log('instanceId is: ' + instanceId);
 			t.ok(instanceId, 'Response contains an instanceId');
 			//Poll AWS every second to see if the instance is running yet
 			//so the subsequent tests don't fail
-			pollInstanceState(instanceId,['pending'],function(){
-				t.end();
-			});
+			//pollInstanceState(instanceId,['pending'],function(){
+			//	t.end();
+			//});
+			//setTimeout(function(){
+			//	  t.end();
+			//},10000);
+			t.end();
+
 		});
 	});
 	t.test('New instance should be in the list of running instances', function(t){
-		var filters = {},
+		var filters = [],
 			instances = [];
 		for (var i = 0; i < config.securityGroups.length; i++) {
-			filters['Filter.' + (i + 1) + '.Name'] = 'group-name';
-			filters['Filter.' + (i + 1) + '.Value.1'] = config.securityGroups[i];
+			filters[i] = {Name:'group-name',Values:[config.securityGroups[i]]};
 		}
 		aws.getInstances(filters, function (err, response) {
+			t.notOk(err,'no error: ' + err);
 			for (var i = 0; i < response.length; i++) {
-				instances.push(response[i].instanceId);
+				instances.push(response[i].InstanceId);
 			}
 			t.ok(instances,'Instance list is not empty');
+		//	console.log('instances is: ' + instances);
 			t.ok(_.contains(instances,instanceId),'Instance list contains the instance we just launched');
 			t.end();
 		});
@@ -64,16 +69,16 @@ test('Launching AMIs', function(t){
 	t.test('Requesting an instance based on Id', function(t){
 		aws.getInstanceDescriptionFromId(instanceId,function(err,response){
 			instance = response;
-			t.equal(instance.instanceId,instanceId,'got back the correct instance');
+			t.equal(instance.InstanceId,instanceId,'got back the correct instance');
 			t.end();
 		});
 	});
 	t.test('Verify instance launched in the correct zone', function(t){
-		t.equal(instance.placement.availabilityZone,config.awsZone,'zone should match config');
+		t.equal(instance.Placement.AvailabilityZone,config.awsZone,'zone should match config');
 		t.end();
 	});
 	t.test('Verify instance launched in the correct groups',function(t){
-		var instanceGroups = _.pluck(instance.groupSet.item,'groupName');
+		var instanceGroups = _.pluck(instance.SecurityGroups,'GroupName');
 		var configGroups = config.securityGroups;
 		t.deepEqual(instanceGroups,configGroups,'Security groups should match the groups in the config');
 		t.end();
@@ -98,10 +103,12 @@ test('Spot requests', function(t){
 			'awsZone':config.awsZone,
 			'instanceType':config.instanceType,
 			'securityGroups':config.securityGroups,
-			'spotPrice':config.spotPrice
+			'spotPrice':config.spotPrice,
+			'type':'one-time'
 		};
 		aws.launchSpotInstances(options, function (err, response) {
-			spotRequestId = response.spotInstanceRequestId;
+			t.notOk(err,err);
+			spotRequestId = response.SpotInstanceRequestId;
 			t.ok(spotRequestId,'you get back an ID');
 			t.end();
 		});
@@ -114,7 +121,7 @@ test('Spot requests', function(t){
 	});
 	t.test('Verify request was cancelled',function(t){
 		aws.describeSpotInstanceRequest(spotRequestId,function(err,response){
-			t.equal(response.state,'cancelled');
+			t.equal(response.State,'cancelled');
 			t.end();
 		});
 	});
@@ -124,7 +131,11 @@ test('Spot requests', function(t){
 function pollInstanceState(instanceId,desiredStates,cb){
 	var intervalId = setInterval(function(){
 		aws.getInstanceDescriptionFromId(instanceId,function(err,response){
-			if(!err){
+			if(err){
+				clearInterval(intervalId);
+				cb(err);
+			}
+			else {
 				var instanceState = response.instanceState.name;
 				if(_.contains(desiredStates,instanceState) ){
 					clearInterval(intervalId);
