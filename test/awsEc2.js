@@ -8,7 +8,7 @@ test('Basic describe calls', function(t){
 	t.test('Requesting a list of currently running instances', function(t){
 		var filters = [];
 		aws.getInstances(filters,function(err, response){
-			t.notOk(err,'No error is returned: ' + err);
+			t.notOk(err, err || 'Retrieved list of instances without an error');
 			t.end();
 		})
 	});
@@ -35,18 +35,10 @@ test('Launching AMIs', function(t){
 				t.bailout(err);
 			}
 			instanceId = response[0].InstanceId;
-		//	console.log('instanceId is: ' + instanceId);
-			t.ok(instanceId, 'Response contains an instanceId');
-			//Poll AWS every second to see if the instance is running yet
-			//so the subsequent tests don't fail
-			//pollInstanceState(instanceId,['pending'],function(){
-			//	t.end();
-			//});
-			//setTimeout(function(){
-			//	  t.end();
-			//},10000);
-			t.end();
-
+			t.ok(instanceId, 'Launch request response contains an instanceId');
+			pollInstanceState(instanceId,['pending','running'],function(){
+				t.end();
+			});
 		});
 	});
 	t.test('New instance should be in the list of running instances', function(t){
@@ -56,12 +48,11 @@ test('Launching AMIs', function(t){
 			filters[i] = {Name:'group-name',Values:[config.securityGroups[i]]};
 		}
 		aws.getInstances(filters, function (err, response) {
-			t.notOk(err,'no error: ' + err);
+			t.notOk(err,err || 'Retrieved list of running instances without an error');
 			for (var i = 0; i < response.length; i++) {
 				instances.push(response[i].InstanceId);
 			}
-			t.ok(instances,'Instance list is not empty');
-		//	console.log('instances is: ' + instances);
+			t.ok(instances,'list of running instances list is not empty');
 			t.ok(_.contains(instances,instanceId),'Instance list contains the instance we just launched');
 			t.end();
 		});
@@ -69,23 +60,23 @@ test('Launching AMIs', function(t){
 	t.test('Requesting an instance based on Id', function(t){
 		aws.getInstanceDescriptionFromId(instanceId,function(err,response){
 			instance = response;
-			t.equal(instance.InstanceId,instanceId,'got back the correct instance');
+			t.equal(instance.InstanceId,instanceId,'Request instance by id and got back the correct instance');
 			t.end();
 		});
 	});
 	t.test('Verify instance launched in the correct zone', function(t){
-		t.equal(instance.Placement.AvailabilityZone,config.awsZone,'zone should match config');
+		t.equal(instance.Placement.AvailabilityZone,config.awsZone,'Instance zone should match config');
 		t.end();
 	});
 	t.test('Verify instance launched in the correct groups',function(t){
 		var instanceGroups = _.pluck(instance.SecurityGroups,'GroupName');
 		var configGroups = config.securityGroups;
-		t.deepEqual(instanceGroups,configGroups,'Security groups should match the groups in the config');
+		t.deepEqual(instanceGroups,configGroups,'Instance security groups should match the groups in the config');
 		t.end();
 	});
 	t.test('Terminate the instance', function(t){
 		aws.terminateEc2Instance(instanceId,function(err,response){
-			t.notOk(err,'no error');
+			t.notOk(err,err || 'Issued termination request without an error');
 			pollInstanceState(instanceId,['shutting-down','terminated'],function(){
 				t.end();
 			});
@@ -115,7 +106,7 @@ test('Spot requests', function(t){
 	});
 	t.test('Cancelling a spot request',function(t){
 		aws.cancelSpotRequest(spotRequestId,function(err,response){
-			t.notOk(err,'no error');
+			t.notOk(err,err || 'no error received');
 			t.end();
 		});
 	});
