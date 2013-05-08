@@ -26,8 +26,12 @@ module.exports = function (awsKey, awsSecretKey) {
             'MaxCount':params.numToLaunch,
             'Placement':{AvailabilityZone:params.awsZone},
             'InstanceType':params.instanceType,
-	        'SecurityGroups':params.securityGroups
+	        'SecurityGroupIds':params.securityGroupIds
         }
+	    //For VPC we need to specify a subnetId
+	    if(params.subnetId){
+		    options.SubnetId = params.subnetId;
+	    }
 	    EC2.runInstances(options,function(err,data){
 		    if(!data){
 			    err = 'Failure launching instance(s): ' + err;
@@ -47,10 +51,14 @@ module.exports = function (awsKey, awsSecretKey) {
 	            'ImageId':params.ami,
 		        'InstanceType':params.instanceType,
 		        'Placement':{'AvailabilityZone':params.awsZone},
-	            'SecurityGroups':params.securityGroups
+	            'SecurityGroupIds':params.securityGroupIds
             },
 	        'Type':params.type
         }
+	    //For VPC we need to specify a subnetId
+	    if(params.subnetId){
+		    options.LaunchSpecification.SubnetId = params.subnetId;
+	    }
 	    EC2.requestSpotInstances(options,function(err,data){
 			if (err) {
 				err = 'Failed to issue spot instance request \n ' + err;

@@ -2,22 +2,23 @@
 	"author":"Cameron Gray <cameron@mindflash.com>",
 	"name":"aws-ec2",
 	"description":"A tiny little module for managing ec2 instance from node",
-	"version":"0.2.0",
+	"version":"1.0.0",
 	"repository":{
 		"type":"git",
 		"url":"git://github.com/camerondgray/aws-ec2.git"
 	},
 	"main":"index.js",
 	"scripts":{
-		"test":"tap --timeout=120 test/awsEc2.js"
+		"test":"tap --timeout=120 test/awsEc2.js test/vpc.js"
 	},
 	"engines":{
 		"node":">=0.6.0"
 	},
 	"dependencies":{
-		"aws-lib":">=0.0.6"
+		"aws-sdk":">=1.0.0cd .."
 	},
 	"devDependencies":{
-		"mocha":"0.13.x"
+		"tap": "~0.4.1",
+		"lodash": "~1.0.1"
 	}
 }

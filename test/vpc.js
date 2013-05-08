@@ -6,7 +6,7 @@ var _ = require('lodash');
 
 test('Basic describe calls', function(t){
 	t.test('Requesting a list of currently running instances', function(t){
-		var filters = [];
+		var filters = [{Name:'subnet-id',Values:[config.vpcSubnetId]}];
 		aws.getInstances(filters,function(err, response){
 			t.notOk(err, err || 'Retrieved list of instances without an error');
 			t.end();
@@ -28,7 +28,8 @@ test('Launching AMIs', function(t){
 			'ami':config.ami,
 			'awsZone':config.awsZone,
 			'instanceType':config.instanceType,
-			'securityGroupIds':config.securityGroupIds
+			'securityGroupIds':config.vpcSecurityGroupIds,
+			'subnetId':config.vpcSubnetId
 		};
 		aws.launchOnDemandInstances(options,function(err,response){
 			if(err){
@@ -41,11 +42,14 @@ test('Launching AMIs', function(t){
 			});
 		});
 	});
+	//I tried to abstract out most of the differences between VPC and EC2 but this one just sucks
+	//VPC requires you filter on instance.group-id where EC2 requires group-id
+	//Also sometimes this test just fails because AWS is being slow still haven't found a way around this
 	t.test('New instance should be in the list of running instances', function(t){
 		var filters = [],
 			instances = [];
-		for (var i = 0; i < config.securityGroupIds.length; i++) {
-			filters[i] = {Name:'group-id',Values:[config.securityGroupIds[i]]};
+		for (var i = 0; i < config.vpcSecurityGroupIds.length; i++) {
+			filters[i] = {Name:'instance.group-id',Values:[config.vpcSecurityGroupIds[i]]};
 		}
 		aws.getInstances(filters, function (err, response) {
 			t.notOk(err,err || 'Retrieved list of running instances without an error');
@@ -57,6 +61,7 @@ test('Launching AMIs', function(t){
 			t.end();
 		});
 	});
+
 	t.test('Requesting an instance based on Id', function(t){
 		aws.getInstanceDescriptionFromId(instanceId,function(err,response){
 			instance = response;
@@ -68,12 +73,14 @@ test('Launching AMIs', function(t){
 		t.equal(instance.Placement.AvailabilityZone,config.awsZone,'Instance zone should match config');
 		t.end();
 	});
+
 	t.test('Verify instance launched in the correct groups',function(t){
 		var instanceGroups = _.pluck(instance.SecurityGroups,'GroupId');
-		var configGroups = config.securityGroupIds;
+		var configGroups = config.vpcSecurityGroupIds;
 		t.deepEqual(instanceGroups,configGroups,'Instance security groups should match the groups in the config');
 		t.end();
 	});
+
 	t.test('Terminate the instance', function(t){
 		aws.terminateEc2Instance(instanceId,function(err,response){
 			t.notOk(err,err || 'Issued termination request without an error');
@@ -93,9 +100,10 @@ test('Spot requests', function(t){
 			'ami':config.ami,
 			'awsZone':config.awsZone,
 			'instanceType':config.instanceType,
-			'securityGroupIds':config.securityGroupIds,
+			'securityGroupIds':config.vpcSecurityGroupIds,
 			'spotPrice':config.spotPrice,
-			'type':'one-time'
+			'type':'one-time',
+			'subnetId':config.vpcSubnetId
 		};
 		aws.launchSpotInstances(options, function (err, response) {
 			t.notOk(err,err);
