@@ -3,7 +3,9 @@
 	"secretAccessKey":"yourSecretAccessKey",
 	"awsZone":"us-east-1a",
 	"instanceType":"t1.micro",
-	"securityGroups":["Group1", "Group2"],
+	"securityGroups":["Group1Id", "Group2Id"],
+	"vpcSubnetId":"subnet-id",
+	"vpcSecurityGroupIds":["VPCGroup1Id","VPCGroup2Id"],
 	"ami":"yourAmi",
-	"spotPrice":0.001
+	"spotPrice":"0.001"
 }
