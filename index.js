@@ -16,9 +16,9 @@ function processInstanceDescription(err, data, callback) {
 	callback(err,instances[0]);
 }
 
-module.exports = function (awsKey, awsSecretKey) {
-	AWS.config.update({accessKeyId: awsKey, secretAccessKey: awsSecretKey,region:'us-east-1'});
 	var EC2 = new AWS.EC2();
+module.exports = function (awsKey, awsSecretKey, awsRegion = 'us-east-1') {
+        AWS.config.update({accessKeyId: awsKey, secretAccessKey: awsSecretKey, region: awsRegion});
     function launchOnDemandInstances(params, callback) {
         var options = {
             'ImageId':params.ami,
