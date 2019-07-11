@@ -19,6 +19,6 @@
 	},
 	"devDependencies":{
 		"tap": "~0.4.1",
-		"lodash": "~1.0.1"
+		"lodash": ">=4.17.13"
 	}
 }
